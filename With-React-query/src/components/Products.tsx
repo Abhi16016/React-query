@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import {
+ import {
   Card,
   CardContent,
   CardDescription,
@@ -8,6 +7,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 
 type ProductList = {
   id: number;
@@ -18,37 +19,33 @@ type ProductList = {
   rating: number;
 };
 
-function Products() {
-  const [isLoading, setIsloading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [products, setProducts] = useState<ProductList[]>([]);
+type ProductResData = {
+  products: ProductList[]
+}
 
-  useEffect(() => {
-    const showProducts = async () => {
-      try {
-        setIsloading(true);
-        const response = await fetch("https://dummyjson.com/products");
-        const data = await response.json();
-        setProducts(data.products);
-        setIsloading(false);
-      } catch (err) {
-        if (err instanceof Error) {
-          let errorMsg = err.message;
-          setError(errorMsg);
-        }
-      } finally {
-        setIsloading(false);
-      }
-    };
-    showProducts();
-  }, []);
+  const showProducts = async (): Promise<ProductList[]> => {
+    try{
+      const response = await axios.get<ProductResData>("https://dummyjson.com/products");
+      return response.data.products
+    }catch(error){
+      throw new Error("Failed to fetch data")
+    }
+
+  };
+
+const Products = () => {
+
+   const {isLoading,
+   error,
+   data: products} = useQuery({queryKey: ["products"],  queryFn: showProducts, staleTime: 8000})
+
 
   if (isLoading) {
     return <h3>Loading...</h3>;
   }
-
-  if (error) {
-    return <h3>Error: {error}</h3>;
+ 
+  if (error instanceof Error) {
+    return <h3>Error: {error?.message}</h3>;
   }
 
   return (
@@ -59,8 +56,8 @@ function Products() {
         </h2>
 
         <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
-          {products.map((product) => (
-            <Link to={`/product/${product.id}`} key={product.id}>
+          {products?.map((product) => (
+            <Link to={`/products/${product.id}`} key={product.id}>
               <Card className="cursor-pointer hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <CardTitle>{product.title}</CardTitle>
