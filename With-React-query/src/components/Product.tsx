@@ -43,7 +43,7 @@ const Product = () => {
     staleTime: 8000,
   });
 
-  const mutation = useMutation<Product, unknown, Partial<Product>>({
+  const mutation = useMutation<Product, Error, Partial<Product>>({
     mutationFn: async (newProduct: Partial<Product>): Promise<Product> => {
       const response = await axios.put(
         `https://dummyjson.com/products/${id}`,
